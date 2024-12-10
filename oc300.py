@@ -138,6 +138,7 @@ def start_monitor_mode(conn):
 def start_command_mode(conn):
     logger.info('command mode on, waiting for commands')
     conn._send_raw_cmd(OWN_COMMANDS['command_mode_session'])
+    conn._recv_raw_cmd()
 
     while True:
         try:
