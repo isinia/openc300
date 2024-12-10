@@ -45,9 +45,18 @@ OWN_CMD_REGEXES = {
     'DIMENSION_WRITING': r'\*#([0-9][0-9]?[0-9]?[0-9]?)\*([0-9#]*)\*([0-9#\*]*)##',
 }
 
+# this list is just an extremely incomplete guesswork mess btw
+# largely based on https://github.com/fquinto/bticinoClasse300x
+# and random scraps of Open Web Net documentation
 OWN_COMMANDS = {
-    'monitor_mode_session': '*99*1##',
-    'command_mode_session': '*99*0##',
+    'INIT_MONITOR_SESSION': '*99*1##',
+    'INIT_COMMAND_SESSION': '*99*0##',
+    'GET_LOCAL_TIME': '*#13**0##',
+    'GET_LOCAL_DATE': '*#13**1##',
+    'GET_LOCAL_IP_ADDRESS': '*#13**10##',
+    'GET_LOCAL_NETMASK': '*#13**11##',
+    'GET_FIRMWARE_VERSION': '*#1013**2##',
+    'REQUEST_ACTIVATE_DISPLAY': '*7*73#1#100*##',
 }
 
 
@@ -123,7 +132,7 @@ class Connection:
 
 def start_monitor_mode(conn):
     logger.info('monitor mode on, listening to intercom\'s commands')
-    conn._send_raw_cmd(OWN_COMMANDS['monitor_mode_session'])
+    conn._send_raw_cmd(OWN_COMMANDS['INIT_MONITOR_SESSION'])
 
     while True:
         try:
@@ -137,7 +146,7 @@ def start_monitor_mode(conn):
 
 def start_command_mode(conn):
     logger.info('command mode on, waiting for commands')
-    conn._send_raw_cmd(OWN_COMMANDS['command_mode_session'])
+    conn._send_raw_cmd(OWN_COMMANDS['INIT_COMMAND_SESSION'])
     conn._recv_raw_cmd()
 
     while True:
@@ -174,7 +183,7 @@ if __name__ == '__main__':
         default=20000,
         type=int,
     )
-    arg_group = arg_parser.add_mutually_exclusive_group()
+    arg_group = arg_parser.add_mutually_exclusive_group(required=True)
     arg_group.add_argument(
         '-m',
         '--monitor-mode',
@@ -187,16 +196,37 @@ if __name__ == '__main__':
         help='send commands to your intercom',
         action='store_true',
     )
+    arg_group.add_argument(
+        '-l',
+        '--list-commands',
+        help='list known Classe 300 commands',
+        action='store_true',
+    )
+    arg_group.add_argument(
+        '-C',
+        '--cmd',
+        help='execute a known command',
+        choices=OWN_COMMANDS.keys(),
+        metavar='',
+    )
     args = arg_parser.parse_args()
 
-    conn = Connection(args.host, args.port)
-    conn.connect()
-    logger.info(f'connected to {args.host}:{args.port}')
+    if args.list_commands:
+        print('\n'.join(OWN_COMMANDS.keys()))
+    else:
+        conn = Connection(args.host, args.port)
+        conn.connect()
+        logger.info(f'connected to {args.host}:{args.port}')
 
-    if args.monitor_mode:
-        start_monitor_mode(conn)
-    elif args.command_mode:
-        start_command_mode(conn)
+        if args.monitor_mode:
+            start_monitor_mode(conn)
+        elif args.command_mode:
+            start_command_mode(conn)
+        else:
+            conn._send_raw_cmd(OWN_COMMANDS['INIT_COMMAND_SESSION'])
+            conn._recv_raw_cmd()
+            conn._send_raw_cmd(OWN_COMMANDS[args.cmd])
+            conn._recv_raw_cmd()
 
-    conn.disconnect()
-    logger.info('closed socket connection')
+        conn.disconnect()
+        logger.info('closed socket connection')
