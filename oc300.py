@@ -86,6 +86,23 @@ class OpenWebNetCommand:
         who = int(groups[0])
         return OWN_WHO_VALUES[who] if who in OWN_WHO_VALUES else who
 
+    def _parse_command_where(self, _type, groups):
+        # TODO
+        where = groups[-1 if _type == 'NORMAL' else 1]
+        return where if where else None
+
+    def _parse_command_what(self, groups):
+        # TODO
+        return [int(i) for i in groups[1].split('#')] if groups[1] else None
+
+    def _parse_command_dimension(self, groups):
+        # TODO
+        return int(groups[2]) if groups[2] else None
+
+    def _parse_command_values(self, groups):
+        # TODO
+        return [int(i) for i in groups[3].split('*')] if groups[3] else None
+
     def parse(self):
         parsed = {}
         _type, groups = self._parse_command_syntax()
@@ -93,6 +110,16 @@ class OpenWebNetCommand:
 
         if _type not in ('ACK', 'NACK', 'UNDEFINED'):
             parsed['who'] = self._parse_command_who(groups)
+            parsed['where'] = self._parse_command_where(_type, groups)
+
+            if _type == 'NORMAL':
+                parsed['what'] = self._parse_command_what(groups)
+
+            if _type in ('DIMENSION_REQUEST', 'DIMENSION_WRITING'):
+                parsed['dimension'] = self._parse_command_dimension(groups)
+
+                if _type == 'DIMENSION_WRITING':
+                    parsed['values'] = self._parse_command_values(groups)
 
         return parsed
 
