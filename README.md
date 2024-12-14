@@ -31,6 +31,13 @@ It contains 4 files:
 
 The device is running a custom-built version of (now defunct) [Ångström](https://web.archive.org/web/20200815133137/http://angstrom-distribution.org/) OpenEmbedded-based Linux distribution with a layer of BTicino's own tools. Busybox is available.
 
+If you wish to quickly preview contents of UBIfs image files, you can use the [UBI Reader](https://github.com/onekey-sec/ubi_reader) tool to extract them:
+
+```sh
+ubireader_extract_files btweb_only.ubifs -o btweb_only
+ubireader_extract_files btweb_only_recovery.ubifs -o btweb_only_recovery
+```
+
 ## Flashing
 TODO
 
